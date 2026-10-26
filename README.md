@@ -1,5 +1,7 @@
 # tana
 
+![tana: Find the depth before you cast.](docs/tana.png)
+
 > Find the depth before you cast.
 
 タナ(棚)は、魚が泳いでいる水深のことです。タナが合っていなければ、どれだけ投げても釣れません。
