@@ -24,6 +24,25 @@
 
 使うときは `/tana:mode` を実行するか、「tana のやり方で」と頼んでください。
 
+### クラウドセッション (claude.ai/code) で使う
+
+クラウドセッションは plugin をインストールしません。代わりに、クラウド環境のセットアップスクリプトで `~/.claude/skills/tana` に置くと、skills-dir plugin として `tana:mode` が読み込まれます(2026-10-26 に確認)。
+
+```bash
+#!/bin/bash
+D="$HOME/.claude/skills/tana"
+mkdir -p "$D"
+B=https://raw.githubusercontent.com/snkrheadz/tana/main/plugins/tana
+for f in .claude-plugin/plugin.json skills/mode/SKILL.md skills/mode/pillars/sounding.md skills/mode/pillars/light-tackle.md skills/mode/pillars/one-rod.md skills/mode/pillars/log-the-catch.md skills/mode/pillars/keep-moving.md skills/mode/playbooks/bug-fix.md skills/mode/playbooks/feature.md skills/mode/playbooks/investigation.md; do
+mkdir -p "$D/$(dirname "$f")"
+curl -fsSL "$B/$f" -o "$D/$f" || echo "tana: failed $f"
+done
+echo "tana: $(find "$D" -type f | wc -l) files"
+exit 0
+```
+
+ファイルを足したときは、この一覧も更新してください。環境はおよそ 7 日でキャッシュが作り直され、そのときに最新版を取り直します。
+
 ## 構成
 
 ```
