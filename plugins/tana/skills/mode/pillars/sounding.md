@@ -13,13 +13,13 @@ A check you have only seen pass cannot tell you it measures the right thing.
    does. In Claude Code:
    - a server or watcher: start it with `run_in_background`, wait for its ready line
      with an `until` loop, then hit it with `curl` or a client;
-   - a web UI: drive it through the browser tools, or the official `/verify` skill;
+   - a web UI: drive it through the browser tools, or the built-in `/run` skill;
    - a CLI: run it with the inputs the user will give it and read the output.
 3. **Script the comparison.** When no ready-made check exists, write a short script
    that prints the value you care about, before and after. Keep it in the scratchpad.
    Commit it only when the repository already keeps tests of that kind.
 4. **Change to a prompt, skill, hook, or `CLAUDE.md`.** The artifact is the agent's
-   behavior. Run it headless (`claude -p ... --output-format stream-json`) or with
+   behavior. Run it headless (`claude -p ... --output-format stream-json --verbose`) or with
    `claude plugin eval`, and read what the agent did, not what it said it did.
 
 ## Take the reading before the change
