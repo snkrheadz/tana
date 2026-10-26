@@ -33,7 +33,7 @@
 D="$HOME/.claude/skills/tana"
 mkdir -p "$D"
 B=https://raw.githubusercontent.com/snkrheadz/tana/main/plugins/tana
-for f in .claude-plugin/plugin.json skills/mode/SKILL.md skills/mode/pillars/sounding.md skills/mode/pillars/light-tackle.md skills/mode/pillars/one-rod.md skills/mode/pillars/log-the-catch.md skills/mode/pillars/keep-moving.md skills/mode/playbooks/bug-fix.md skills/mode/playbooks/feature.md skills/mode/playbooks/investigation.md; do
+for f in .claude-plugin/plugin.json skills/mode/SKILL.md skills/mode/pillars/sounding.md skills/mode/pillars/light-tackle.md skills/mode/pillars/one-rod.md skills/mode/pillars/log-the-catch.md skills/mode/pillars/keep-moving.md skills/mode/playbooks/bug-fix.md skills/mode/playbooks/feature.md skills/mode/playbooks/investigation.md skills/retie/SKILL.md; do
 mkdir -p "$D/$(dirname "$f")"
 curl -fsSL "$B/$f" -o "$D/$f" || echo "tana: failed $f"
 done
@@ -51,6 +51,7 @@ plugins/tana/
 │   ├── SKILL.md       # 入口。柱と、作業の振り分け
 │   ├── pillars/       # 柱ごとの詳細(必要になったときだけ読む)
 │   └── playbooks/     # 調査・バグ修正・機能追加の手順
+├── skills/retie/       # 設定の棚卸し: 項目を外して実タスクを再実行し、効いたものだけ残す
 └── evals/             # claude plugin eval で回す検証ケース
 ```
 
