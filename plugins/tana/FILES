@@ -1,4 +1,5 @@
 .claude-plugin/plugin.json
+skills/mode/SKILL.md
 skills/mode/pillars/keep-moving.md
 skills/mode/pillars/light-tackle.md
 skills/mode/pillars/log-the-catch.md
@@ -7,5 +8,4 @@ skills/mode/pillars/sounding.md
 skills/mode/playbooks/bug-fix.md
 skills/mode/playbooks/feature.md
 skills/mode/playbooks/investigation.md
-skills/mode/SKILL.md
 skills/retie/SKILL.md
