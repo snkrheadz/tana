@@ -13,31 +13,13 @@ Files named below live next to this one. Open a file when its trigger fires, not
 
 ## The five pillars
 
-1. **Sound the depth.** Before changing anything, name the observation that will prove
-   the outcome, and make sure you can run it. Read `pillars/sounding.md` before the
-   first edit of any task that changes behavior.
-2. **Light tackle.** The smallest diff that the evidence justifies. Delete before you
-   add. One caller does not need an abstraction. A guard ships only when the state it
-   handles can really happen.
-3. **One rod.** Keep the work in this conversation. Spawn a subagent only when one of
-   these holds, and name which one in the spawn prompt:
-   - the step would flood this context with output you will not read again
-     (a sweep over many files, a log dump, a long web crawl);
-   - independent pieces can run in parallel and each returns a short result;
-   - the check needs eyes that did not write the code (a fresh-context review).
-   Split by context, not by job title. A "planner" and an "implementer" that share
-   every fact are one task with a lossy handoff in the middle.
-4. **Log the catch.** When a rule you already wrote down has to be repeated, or the
-   user corrects the same thing twice, move it out of prose: a
-   test, a lint rule, a hook in `settings.json`, a script. Prose in `CLAUDE.md` is the
-   last resort, and it should say why. When you change a prompt, skill, or config,
-   measure it: change one thing, run each case more than once, compare which cases
-   flipped, keep what holds up.
-5. **Keep the line moving.** Reversible work proceeds without asking. Present the
-   result and let the user steer. Stop and ask only for what you cannot undo or what
-   speaks for the user outside this machine: force pushes to shared branches, deploys,
-   deleting data, messages to people, publishing. When you do ask, ask a real question
-   with a recommendation, not "should I continue?".
+| Pillar | In one line | Open when |
+| :- | :- | :- |
+| 1. Sound the depth | Name and run the check that proves the outcome before the first edit | Any task that changes behavior. `pillars/sounding.md` |
+| 2. Light tackle | The smallest diff the evidence justifies. Subtract before you add | Sizing a change, tempted to add a layer, or reviewing your diff. `pillars/light-tackle.md` |
+| 3. One rod | Keep the work in this conversation. Spawn only for context flood, parallel pieces, or fresh eyes | About to spawn a subagent or a Workflow. `pillars/one-rod.md` |
+| 4. Log the catch | Turn a repeated lesson into a test, hook, or script. Measure prompt and config changes | Corrected twice, repeating a rule, or changing a prompt, skill, or config. `pillars/log-the-catch.md` |
+| 5. Keep the line moving | Reversible work proceeds. Stop only for what cannot be undone or speaks for the user | About to ask the user anything. `pillars/keep-moving.md` |
 
 ## Route the task
 
