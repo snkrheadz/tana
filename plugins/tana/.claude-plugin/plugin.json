@@ -1,7 +1,7 @@
 {
   "name": "tana",
   "description": "Find the depth before you cast: a Claude Code working style that builds the check first, writes less, keeps one loop, turns lessons into structure, and never parks reversible work on a human.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "snkrheadz"
   },
