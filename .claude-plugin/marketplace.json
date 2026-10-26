@@ -1,0 +1,18 @@
+{
+  "name": "tana",
+  "owner": {
+    "name": "snkrheadz"
+  },
+  "description": "tana: a Claude Code working style that finds the depth (the check) before it casts (the change).",
+  "plugins": [
+    {
+      "name": "tana",
+      "source": "./plugins/tana",
+      "description": "Find the depth before you cast: a Claude Code working style that builds the check first, writes less, keeps one loop, turns lessons into structure, and never parks reversible work on a human.",
+      "version": "0.1.0",
+      "author": {
+        "name": "snkrheadz"
+      }
+    }
+  ]
+}
