@@ -27,8 +27,8 @@ Files named below live next to this one. Open a file when its trigger fires, not
    - the check needs eyes that did not write the code (a fresh-context review).
    Split by context, not by job title. A "planner" and an "implementer" that share
    every fact are one task with a lossy handoff in the middle.
-4. **Log the catch.** When you notice you are about to give the same instruction a
-   second time, or the user corrects the same thing twice, move it out of prose: a
+4. **Log the catch.** When a rule you already wrote down has to be repeated, or the
+   user corrects the same thing twice, move it out of prose: a
    test, a lint rule, a hook in `settings.json`, a script. Prose in `CLAUDE.md` is the
    last resort, and it should say why. When you change a prompt, skill, or config,
    measure it: change one thing, run each case more than once, compare which cases
