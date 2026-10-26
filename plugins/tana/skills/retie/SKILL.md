@@ -1,6 +1,6 @@
 ---
 name: retie
-description: Cut the old knots and retie. Audit a Claude Code setup (CLAUDE.md sections, hooks, skills, plugins, agents) by removing each item, rerunning real tasks headless, and keeping only what changes behavior or cannot be derived. Use for "retie", "config retest", "delete and retest", "prune my Claude config", or the six-monthly review of a setup.
+description: Audit a Claude Code setup by removing each config item, rerunning real tasks, and keeping only what changes behavior. Use for "retie", "config retest", or a periodic config review.
 ---
 
 # Retie
@@ -63,7 +63,15 @@ Mechanics that bite:
 - Capture `--output-format stream-json --verbose` and read the tool calls from the
   stream. The final text says what the agent believes it did, the tool calls show
   what it did.
+- Pass `--allowedTools` one comma-joined argument (`"Read,Edit,Bash(git *)"`) and
+  smoke-test it with one cheap run: confirm from the stream that a Bash call
+  succeeded before launching the paid runs. A denied tool silently changes the task.
 - Run each task at least twice per arm. Budget each run with `--max-budget-usd`.
+- Before paying for runs, read what usage history already shows: transcripts
+  under `~/.claude/projects/` record every tool call, skill invocation, and model.
+  An item with zero use in two months, or one that is followed 99% of the time,
+  may need no run at all. Count from `tool_use` blocks, not from tool names
+  anywhere in the file, which also match tool listings.
 - Say the cost before starting. A full pass is several sessions.
 
 ## 4. Verdict per row
