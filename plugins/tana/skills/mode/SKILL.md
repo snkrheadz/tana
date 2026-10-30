@@ -30,6 +30,7 @@ Pick the playbook that matches and open it. If none matches, apply the pillars d
 | Explain, compare, or decide, with no code change | `playbooks/investigation.md` |
 | Something is broken | `playbooks/bug-fix.md` |
 | New or changed behavior | `playbooks/feature.md` |
+| Act on review findings | `playbooks/review-loop.md` |
 
 Small and obvious work (a typo, a one-line config change, a rename the user spelled out)
 skips the playbook. Pillar 1 still applies: say how you checked it.
