@@ -6,3 +6,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: scripts/update-files.sh --check
+      - run: python3 -I scripts/check-terms.py
