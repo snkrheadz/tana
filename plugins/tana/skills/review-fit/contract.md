@@ -57,3 +57,13 @@ numbers over this file.
 - Prose cannot reliably override the level's stance. One repo told its CI reviewer to
   report only confirmed minor findings; unconfirmed ones kept appearing, and the repo
   ended up filtering them in code.
+
+## Running it in CI
+
+- Under `--permission-mode dontAsk`, a Bash command that contains `$(...)` is denied even
+  when its commands are allowed (`echo $(git rev-parse HEAD)` was denied with
+  `Bash(git:*)` and `Bash(echo:*)` allowed, on 2.1.311 and 2.1.314). `/code-review`
+  sometimes opens with `cd "$(git rev-parse --show-toplevel)"`, so such a run can end
+  without ever reading the diff. One repo lost five CI reviews in two days this way.
+- Write the diff to a file the reviewer is told to read first, and re-run a run that
+  never read the diff instead of treating its empty result as a pass.
