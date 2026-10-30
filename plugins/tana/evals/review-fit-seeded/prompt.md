@@ -6,4 +6,4 @@ runs: 3
 allowed_tools: [Read, Glob, Grep, Skill, Edit, Write, Bash]
 ---
 
-Our `/code-review` runs (locally, and in CI through `.github/workflows/review.yml`) keep reporting small things that REVIEW.md tells reviewers to skip, and they sometimes miss rules that REVIEW.md lists. Please reorganize our review setup so the reviewer actually follows our policy, and tell me what you changed and why.
+Our `/code-review` runs (locally, and in CI through `.github/workflows/review.yml`) keep reporting small things that REVIEW.md tells reviewers to skip, they sometimes miss rules that REVIEW.md lists, and some CI runs come back with no findings at all. Please reorganize our review setup so the reviewer actually follows our policy, and tell me what you changed and why.

@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - run: npm i -g @anthropic-ai/claude-code
-      - run: claude -p "/code-review high origin/main...HEAD" > review.txt
+      - run: claude -p "/code-review high origin/main...HEAD" --permission-mode dontAsk --allowedTools "Bash(git:*)" Read Grep Glob > review.txt
       - run: gh pr comment ${{ github.event.number }} --body-file review.txt
 EOF
 cat > src/i18n.ts <<'EOF'

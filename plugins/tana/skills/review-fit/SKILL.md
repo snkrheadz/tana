@@ -34,6 +34,8 @@ checklists. One row per instruction, with what it asks for.
 - One command reproduces the CI verdict locally: same level, same inputs, same mapping.
   Without it the author cannot run the check that will judge the work before pushing it.
 - Record the Claude Code version CI pins. Re-run `probe.sh` when it moves.
+- Make sure the CI reviewer can read the diff: see "Running it in CI" in `contract.md`.
+  A run that never read the diff is a failed run, not a pass.
 
 ## 4. Close the loop across PRs
 
