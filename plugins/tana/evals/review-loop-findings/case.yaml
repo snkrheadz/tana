@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: review-loop-findings
+tags: [review-loop, pillar-4]
+context:
+  scaffold_script: fixture.sh
