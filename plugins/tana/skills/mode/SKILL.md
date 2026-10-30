@@ -31,6 +31,8 @@ Pick the playbook that matches and open it. If none matches, apply the pillars d
 | Something is broken | `playbooks/bug-fix.md` |
 | New or changed behavior | `playbooks/feature.md` |
 | Act on review findings | `playbooks/review-loop.md` |
+| A check is red on a PR or branch | `playbooks/red-check.md` |
+| Open a PR or write its description | `playbooks/opening-a-pr.md` |
 
 Small and obvious work (a typo, a one-line config change, a rename the user spelled out)
 skips the playbook. Pillar 1 still applies: say how you checked it.
