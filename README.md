@@ -52,7 +52,7 @@ plugins/tana/
 ├── skills/mode/
 │   ├── SKILL.md       # 入口。柱と、作業の振り分け
 │   ├── pillars/       # 柱ごとの詳細(必要になったときだけ読む)
-│   └── playbooks/     # 調査・バグ修正・機能追加・レビュー指摘への対応の手順
+│   └── playbooks/     # 調査・バグ修正・機能追加・レビュー指摘・赤いチェック・PR の出し方の手順
 ├── skills/retie/       # 設定の棚卸し: 項目を外して実タスクを再実行し、効いたものだけ残す
 ├── skills/review-fit/  # REVIEW.md と CI のレビューを /code-review が実際に読むもの・返すものに合わせる
 └── evals/             # claude plugin eval で回す検証ケース
@@ -67,7 +67,7 @@ claude plugin eval . --scaffold --allow-tools Edit "Bash(python3 *)" --disallow-
 
 各ケースは tana あり・なしの両方で複数回走ります。柱を変えるときは一度に一つだけ変え、どのケースの結果が変わったかを見ます。
 
-レビューのケース (`review-*`) は、ファイルの作成と git を使い、トレースを読む grader があるので、別に回します。既定の判定モデル (haiku) は長いトレースで正しい run を落とすことがあったため、sonnet で判定します (1 run あたり約 $1.2、haiku なら約 $0.25)。
+レビューと PR のケース (`review-*`、`red-check-*`、`pr-description` など) は、ファイルの作成と git を使い、トレースを読む grader があるので、別に回します。`--case` は 1 つしか効かないので、ケースごとに回します。既定の判定モデル (haiku) は長いトレースで正しい run を落とすことがあったため、sonnet で判定します (1 run あたり約 $1.2、haiku なら約 $0.25)。
 
 ```bash
 claude plugin eval . --case 'review-*' --scaffold --allow-tools Edit Write Bash --judge-model sonnet
