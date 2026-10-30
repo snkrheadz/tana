@@ -52,11 +52,24 @@ plugins/tana/
 ├── skills/mode/
 │   ├── SKILL.md       # 入口。柱と、作業の振り分け
 │   ├── pillars/       # 柱ごとの詳細(必要になったときだけ読む)
-│   └── playbooks/     # 調査・バグ修正・機能追加・レビュー指摘・赤いチェック・PR の出し方の手順
+│   ├── playbooks/     # 調査・バグ修正・機能追加・レビュー指摘・赤いチェック・PR の出し方の手順
+│   └── principles/    # 設計の原則(INDEX.md の「開くとき」に当たったら読む)
 ├── skills/retie/       # 設定の棚卸し: 項目を外して実タスクを再実行し、効いたものだけ残す
 ├── skills/review-fit/  # REVIEW.md と CI のレビューを /code-review が実際に読むもの・返すものに合わせる
+├── skills/guide/       # どの作業にどの skill を使うかの案内
+├── skills/<その他>/    # /tana:<名前> で呼ぶ skill (下の一覧)
+├── agents/            # comment-auditor (コメントの監査)
 └── evals/             # claude plugin eval で回す検証ケース
 ```
+
+`/tana:<名前>` で呼ぶ skill は、モデルには見えず (`disable-model-invocation: true`)、毎回のセッションの文脈を使いません。`typescript` だけは、`.ts`/`.tsx` を読み書きするときに自動で効きます。
+
+| 分類 | skill |
+| :- | :- |
+| 理解する | `explain-code` (コードの仕組みと置き場所)、`trace-why` (なぜこうなっているか・何が壊したか)、`teach` (人に分かるように説明)、`plain-words` (直前の返答を平易に)、`restate-goal` (目的の言い直し)、`catch-up` (離れていた間の追いつき)、`rebuild-context` (自分の文脈の再構築)、`sharpen` (依頼を深くする) |
+| 設計・レビュー | `sketch-design` (型と構造を先に)、`compete` (複数案を競わせて良い所を接ぎ木)、`fan-out` (並列で調べて 1 つの報告)、`stress-review` (前提と設計まで攻める)、`blast-radius` (差分の外で壊れるもの)、`plan-big-change` (大きな変更の監査できる計画) |
+| 確かめる | `failing-test-first`、`vet-measurement` (性能の数字を信じる前の確認)、`create-verify-skill` / `maintain-verify-skill` (アプリを利用者のように動かす検証 skill)、`create-formal-check` / `maintain-formal-check` (形式検証)、`statechart` (状態機械を TLA+ で確かめて図にする) |
+| 学ぶ・書く | `lock-in-lessons` (繰り返す失敗を不可能にする)、`retro` (セッションの振り返り)、`decision-log` (長い作業の判断の記録)、`capture-my-style` (自分の流儀を skill に)、`comment-audit`、`cut-ai-tells` (機械的な言い回しを削る)、`tech-writing`、`typescript` |
 
 ## 検証
 

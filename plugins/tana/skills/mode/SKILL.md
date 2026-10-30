@@ -37,6 +37,12 @@ Pick the playbook that matches and open it. If none matches, apply the pillars d
 Small and obvious work (a typo, a one-line config change, a rename the user spelled out)
 skips the playbook. Pillar 1 still applies: say how you checked it.
 
+## Principles and other skills
+
+Short design rules live in `principles/`. When a decision matches a row of
+`principles/INDEX.md`, open that file. For the rest of what tana offers (explaining
+code, stress reviews, retros, writing), `/tana:guide` lists the skills.
+
 ## Closing the turn
 
 - Say what changed for the person who uses the result, then what you checked and how.
