@@ -1,6 +1,6 @@
 ---
 name: review-fit
-description: Fit a repository's review setup (REVIEW.md, review rules in CLAUDE.md, the CI review step) to what `/code-review` actually reads and returns, so the reviewer enforces the project's rules and its findings settle. Use when `/code-review` keeps reporting what the policy says to skip, misses project rules, never gets to zero findings, or when asked to tidy REVIEW.md or the review setup.
+description: Fit a repository's review setup (REVIEW.md, review rules in CLAUDE.md, the CI review step) to what `/code-review` actually reads and returns, so the reviewer enforces the project's rules and its findings settle. Use when `/code-review` keeps reporting what the policy says to skip, misses project rules, never gets to zero findings, when the same findings keep coming back across PRs, or when asked to tidy REVIEW.md or the review setup.
 ---
 
 # Review fit
@@ -35,7 +35,18 @@ checklists. One row per instruction, with what it asks for.
   Without it the author cannot run the check that will judge the work before pushing it.
 - Record the Claude Code version CI pins. Re-run `probe.sh` when it moves.
 
-## 4. Measure before you keep it
+## 4. Close the loop across PRs
+
+- **Record every run** where it outlives the PR and a new session can read it without
+  cloud credentials, such as an append-only file on a side branch. A sticky comment that
+  is overwritten or an artifact that expires loses the first occurrence.
+- **Signal a repeat where it cannot be missed**: a SessionStart hook that prints it
+  before work starts, or a required check that fails until the rule has a guard. Issues
+  and labels go unread.
+- **Pick one number and take its baseline now**, from the history you already have:
+  review rounds per PR, or the share of findings on lines the previous push changed.
+
+## 5. Measure before you keep it
 
 A change to review config is a change to behavior. Pick three to five merged PRs with
 known real findings (bugs fixed after review) and known noise (findings closed without a
@@ -44,7 +55,7 @@ least twice each. Keep the change if the real findings are still found and the r
 drops. Read the PRs whose result flipped. A `high` run on a mid-sized PR cost $0.6 to
 $2.9 in one repo, so state the estimate before running.
 
-## 5. Ship it as its own change
+## 6. Ship it as its own change
 
 The review setup is team policy and often the merge gate. Put it in its own PR, apart
 from feature work, with the before and after numbers. A person merges it.
