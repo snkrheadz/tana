@@ -17,8 +17,20 @@ sometimes. Put each lesson where it is enforced most cheaply.
 | `CLAUDE.md` | None of the above can carry it. Write the rule and the reason behind it |
 | Auto-memory | A personal preference of this user, not a rule of the codebase |
 
-When you move a rule into a stronger home, delete the prose version in the same
-change.
+## Moving a rule into a check
+
+1. **Measure before you enforce.** Run the detection over the whole repository and look
+   at what it matches. If the matches are real, write the check and give each look-alike
+   a stated, permanent exception with its reason, kept apart from debt. If fixing a match
+   is a judgment call (rename it or extend a table, move it or leave it), keep the rule
+   as a review-time signal: a check that blocks on judgment calls gets switched off.
+2. **Baseline what is already broken.** When existing code breaks the rule and fixing it
+   is out of scope, list each existing violation next to the check. A new violation
+   fails. A listed one that no longer exists fails too, so the list only shrinks.
+3. **Leave one home.** Search for every written copy of the rule (CLAUDE.md, review
+   docs, guides for people, mirrored files) and point each at the check or delete it, in
+   the same change. Turn off any softer signal that reports the same thing, such as a
+   bot comment or a reviewer prompt.
 
 ## When the user corrects you
 
