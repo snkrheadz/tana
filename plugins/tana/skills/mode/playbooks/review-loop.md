@@ -5,10 +5,17 @@ zero findings is not the finish line. Done is: the confirmed defects are fixed, 
 fix has been reviewed like any other new code.
 
 1. **Sort the findings.** Fix the confirmed defects. A plausible finding with no failure
-   you can name, or a cost claim with no numbers, gets a written reason instead of a code
+   you can name, or a cost claim with no numbers, gets a reply with the concrete reason
+   instead of a code change. Never change code only to quiet the reviewer. Findings about
+   security, auth, billing, user data, or migrations are fixed or taken to the owner,
+   never waved through.
+2. **Check for a repeat.** Search `git log` and past review notes. A real finding the
+   reviewer made before goes to `pillars/log-the-catch.md`. A finding you declined before
+   that came back goes into the project's shared triage list, a file the reviewer is
+   given: when it may be skipped, when it must not be, an example, and where the decision
+   came from. Mark it a candidate until it holds on more PRs, and keep security, auth,
+   billing, data, and migration findings off the list. Make the list change its own
    change.
-2. **Check for a repeat.** If the reviewer said the same thing before (search `git log`
-   and past review notes), handle it with `pillars/log-the-catch.md`.
 3. **Review your fix before you call it ready.** The fix is new code nobody has reviewed.
    Run `git diff` over everything since the reviewed commit and read it as the reviewer
    would: new branches, new guards and how they can be passed around, the callers of what
