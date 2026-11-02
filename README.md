@@ -4,8 +4,8 @@
 
 > Find the depth before you cast.
 
-タナ(棚)は、魚が泳いでいる水深のことです。タナが合っていなければ、どれだけ投げても釣れません。
-コードにとってのタナは「その変更が正しいと分かる確認方法」です。tana は、確認方法を先に見つけてから手を動かす、Claude Code 向けの作業スタイルです。
+A tana (タナ) is the depth where the fish are holding. An angler who skips finding it can cast all day and catch nothing.
+In code, the depth is the check that tells you a change is right. tana is a working style for Claude Code: find the check first, then make the change.
 
 ## 5 本の柱
 
