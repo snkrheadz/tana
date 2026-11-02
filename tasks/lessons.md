@@ -2,6 +2,14 @@
 
 Corrections from the user, with the pattern and the reason. Newest first.
 
+## 2026-11-02: README.md is English only
+
+- **Pattern:** write README.md entirely in English, with no Japanese, even when the
+  conversation is in Japanese.
+- **Why:** the user asked for the README in English after an update kept its Japanese text.
+- **How to apply:** when editing README.md, write new text in English and translate any
+  Japanese you touch; check with `grep -P '[\p{Hiragana}\p{Katakana}\p{Han}]' README.md`.
+
 ## 2026-10-30: never name or credit outside reference material
 
 - **Pattern:** when ideas from another project's skills or docs are used, tana's files,
