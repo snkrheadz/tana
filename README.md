@@ -24,7 +24,7 @@
 /plugin install tana@tana
 ```
 
-使うときは `/tana:mode` を実行するか、「tana のやり方で」と頼んでください。
+使うときは `/tana:mode` を実行するか、「tana のやり方で」と頼んでください。どの skill を使えばよいか迷ったら `/tana:guide` に聞いてください。
 
 ### クラウドセッション (claude.ai/code) で使う
 
@@ -60,7 +60,13 @@ plugins/tana/
 ├── skills/<その他>/    # /tana:<名前> で呼ぶ skill (下の一覧)
 ├── agents/            # comment-auditor (コメントの監査)
 └── evals/             # claude plugin eval で回す検証ケース
+docs/decisions.md      # eval で測った変更と、その結果残したもの・外したもの
+scripts/
+├── update-files.sh    # plugins/tana/FILES の再生成 (--check で古さを検出)
+└── check-terms.py     # 載せない語が入っていないかの検査
 ```
+
+CI (`.github/workflows/check.yml`) は push と PR のたびに `update-files.sh --check` と `check-terms.py` を走らせます。
 
 `/tana:<名前>` で呼ぶ skill は、モデルには見えず (`disable-model-invocation: true`)、毎回のセッションの文脈を使いません。`typescript` だけは、`.ts`/`.tsx` を読み書きするときに自動で効きます。
 
@@ -78,7 +84,7 @@ cd plugins/tana
 claude plugin eval . --scaffold --allow-tools Edit "Bash(python3 *)" --disallow-tools Write
 ```
 
-各ケースは tana あり・なしの両方で複数回走ります。柱を変えるときは一度に一つだけ変え、どのケースの結果が変わったかを見ます。
+各ケースは tana あり・なしの両方で複数回走ります。柱を変えるときは一度に一つだけ変え、どのケースの結果が変わったかを見ます。測った結果と、残したか外したかは `docs/decisions.md` に記録します。
 
 レビューと PR のケース (`review-*`、`red-check-*`、`pr-description` など) は、ファイルの作成と git を使い、トレースを読む grader があるので、別に回します。`--case` は 1 つしか効かないので、ケースごとに回します。既定の判定モデル (haiku) は長いトレースで正しい run を落とすことがあったため、sonnet で判定します (1 run あたり約 $1.2、haiku なら約 $0.25)。
 
