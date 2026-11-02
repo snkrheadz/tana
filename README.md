@@ -4,31 +4,31 @@
 
 > Find the depth before you cast.
 
-A tana (タナ) is the depth where the fish are holding. An angler who skips finding it can cast all day and catch nothing.
-In code, the depth is the check that tells you a change is right. tana is a working style for Claude Code: find the check first, then make the change.
+A tana is the depth where the fish are holding. An angler who skips finding it can cast all day and catch nothing.
+In code, the depth is the check that tells you a change is right. tana is a working style for Claude Code: find the check first, then make the change. It comes with 33 skills, each called as `/tana:<name>`.
 
-## 5 本の柱
+## The five pillars
 
-| 柱 | 一言で |
+| Pillar | In one line |
 | :- | :- |
-| 1. タナを測る (Sound the depth) | 変更の前に、結果を確かめる手段を用意し、変更前の状態を一度見ておく |
-| 2. 仕掛けは軽く (Light tackle) | 証拠が正当化する最小の差分。足す前に引く |
-| 3. 一本の竿 (One rod) | 作業はひとつのループで。subagent は context が溢れるとき、並列、独立した検証のときだけ |
-| 4. 釣果を記録する (Log the catch) | 二度目の指示は仕組み(テスト・hook・スクリプト)に変える。設定変更は eval で測る |
-| 5. 糸を止めない (Keep the line moving) | 元に戻せる作業は進めて結果を見せる。取り消せない操作だけ止まって聞く |
+| 1. Sound the depth | Before the change, set up a way to check the result and look at the current state once |
+| 2. Light tackle | The smallest diff the evidence justifies. Subtract before you add |
+| 3. One rod | Keep the work in one loop. Spawn a subagent only for context flood, parallel pieces, or independent verification |
+| 4. Log the catch | Turn an instruction given twice into structure (a test, hook, or script). Measure config changes with evals |
+| 5. Keep the line moving | Reversible work proceeds and shows its result. Stop and ask only before what cannot be undone |
 
-## インストール
+## Install
 
 ```
 /plugin marketplace add snkrheadz/tana
 /plugin install tana@tana
 ```
 
-使うときは `/tana:mode` を実行するか、「tana のやり方で」と頼んでください。どの skill を使えばよいか迷ったら `/tana:guide` に聞いてください。
+To use it, run `/tana:mode` or ask Claude to work "the tana way".
 
-### クラウドセッション (claude.ai/code) で使う
+### Cloud sessions (claude.ai/code)
 
-クラウドセッションは plugin をインストールしません。代わりに、クラウド環境のセットアップスクリプトで `~/.claude/skills/tana` に置くと、skills-dir plugin として `tana:mode` が読み込まれます(2026-10-26 に確認)。
+Cloud sessions do not install plugins. Instead, have the cloud environment's setup script place tana in `~/.claude/skills/tana`, and `tana:mode` loads as a skills-dir plugin (confirmed 2026-10-26).
 
 ```bash
 #!/bin/bash
@@ -43,50 +43,53 @@ echo "tana: $(find "$D" -type f | wc -l) files"
 exit 0
 ```
 
-配布するファイルの一覧は `plugins/tana/FILES` にあり、スクリプトはそれを読みます。ファイルを足したら `scripts/update-files.sh` で一覧を作り直してください(CI が古い一覧を検出します)。環境はおよそ 7 日でキャッシュが作り直され、そのときに最新版を取り直します。
+The script reads the list of distributed files from `plugins/tana/FILES`. After adding a file, regenerate the list with `scripts/update-files.sh` (CI catches a stale list). The environment rebuilds its cache about every 7 days and fetches the latest version then.
 
-## 構成
+## Skills
+
+tana has 33 skills. If you are not sure which one fits, tell `/tana:guide` what you are doing and it points you to one.
+
+| Group | Skills |
+| :- | :- |
+| Working style | `mode` (work the tana way), `guide` (which skill fits which task) |
+| Tune the setup | `retie` (remove config items, rerun real tasks, keep only what changes behavior), `review-fit` (fit REVIEW.md and the CI review to what /code-review actually reads and returns) |
+| Understand | `explain-code` (how the code works and where things live), `trace-why` (why it is this way, what broke it), `teach` (explain so a person understands), `plain-words` (restate the last reply plainly), `restate-goal` (restate the goal), `catch-up` (catch up on what happened while you were away), `rebuild-context` (rebuild your own context), `sharpen` (deepen a request) |
+| Design and review | `sketch-design` (types and structure first), `compete` (pit several drafts against each other and graft the best parts), `fan-out` (research in parallel, report once), `stress-review` (attack the premises and the design), `blast-radius` (what breaks outside the diff), `plan-big-change` (an auditable plan for a large change) |
+| Verify | `failing-test-first`, `vet-measurement` (check a performance number before trusting it), `create-verify-skill` / `maintain-verify-skill` (a verify skill that drives the app like a user), `create-formal-check` / `maintain-formal-check` (formal verification), `statechart` (check a state machine in TLA+ and draw it) |
+| Learn and write | `lock-in-lessons` (make a repeated mistake impossible), `retro` (look back on a session), `decision-log` (record decisions in long work), `capture-my-style` (turn your own style into a skill), `comment-audit`, `cut-ai-tells` (cut mechanical phrasing), `tech-writing`, `typescript` |
+
+Every skill except `mode`, `retie`, `review-fit`, and `typescript` is hidden from the model (`disable-model-invocation: true`) and loads only when called as `/tana:<name>`, so it costs no session context. `typescript` applies on its own when reading or editing `.ts`/`.tsx` files.
+
+## Layout
 
 ```
 plugins/tana/
 ├── skills/mode/
-│   ├── SKILL.md       # 入口。柱と、作業の振り分け
-│   ├── pillars/       # 柱ごとの詳細(必要になったときだけ読む)
-│   ├── playbooks/     # 調査・バグ修正・機能追加・レビュー指摘・赤いチェック・PR の出し方の手順
-│   └── principles/    # 設計の原則(INDEX.md の「開くとき」に当たったら読む)
-├── skills/retie/       # 設定の棚卸し: 項目を外して実タスクを再実行し、効いたものだけ残す
-├── skills/review-fit/  # REVIEW.md と CI のレビューを /code-review が実際に読むもの・返すものに合わせる
-├── skills/guide/       # どの作業にどの skill を使うかの案内
-├── skills/<その他>/    # /tana:<名前> で呼ぶ skill (下の一覧)
-├── agents/            # comment-auditor (コメントの監査)
-└── evals/             # claude plugin eval で回す検証ケース
-docs/decisions.md      # eval で測った変更と、その結果残したもの・外したもの
+│   ├── SKILL.md       # entry point: the pillars and task routing
+│   ├── pillars/       # detail per pillar (read only when needed)
+│   ├── playbooks/     # steps for investigation, bug fix, feature, review findings, red checks, opening a PR
+│   └── principles/    # design principles (read when a trigger in INDEX.md fires)
+├── skills/<name>/     # the other skills (listed above)
+├── agents/            # comment-auditor (audits comments)
+└── evals/             # cases run with claude plugin eval
+docs/decisions.md      # changes measured with evals, and what was kept or dropped
 scripts/
-├── update-files.sh    # plugins/tana/FILES の再生成 (--check で古さを検出)
-└── check-terms.py     # 載せない語が入っていないかの検査
+├── update-files.sh    # regenerate plugins/tana/FILES (--check detects a stale list)
+└── check-terms.py     # check that banned words stay out
 ```
 
-CI (`.github/workflows/check.yml`) は push と PR のたびに `update-files.sh --check` と `check-terms.py` を走らせます。
+CI (`.github/workflows/check.yml`) runs `update-files.sh --check` and `check-terms.py` on every push and PR.
 
-`/tana:<名前>` で呼ぶ skill は、モデルには見えず (`disable-model-invocation: true`)、毎回のセッションの文脈を使いません。`typescript` だけは、`.ts`/`.tsx` を読み書きするときに自動で効きます。
-
-| 分類 | skill |
-| :- | :- |
-| 理解する | `explain-code` (コードの仕組みと置き場所)、`trace-why` (なぜこうなっているか・何が壊したか)、`teach` (人に分かるように説明)、`plain-words` (直前の返答を平易に)、`restate-goal` (目的の言い直し)、`catch-up` (離れていた間の追いつき)、`rebuild-context` (自分の文脈の再構築)、`sharpen` (依頼を深くする) |
-| 設計・レビュー | `sketch-design` (型と構造を先に)、`compete` (複数案を競わせて良い所を接ぎ木)、`fan-out` (並列で調べて 1 つの報告)、`stress-review` (前提と設計まで攻める)、`blast-radius` (差分の外で壊れるもの)、`plan-big-change` (大きな変更の監査できる計画) |
-| 確かめる | `failing-test-first`、`vet-measurement` (性能の数字を信じる前の確認)、`create-verify-skill` / `maintain-verify-skill` (アプリを利用者のように動かす検証 skill)、`create-formal-check` / `maintain-formal-check` (形式検証)、`statechart` (状態機械を TLA+ で確かめて図にする) |
-| 学ぶ・書く | `lock-in-lessons` (繰り返す失敗を不可能にする)、`retro` (セッションの振り返り)、`decision-log` (長い作業の判断の記録)、`capture-my-style` (自分の流儀を skill に)、`comment-audit`、`cut-ai-tells` (機械的な言い回しを削る)、`tech-writing`、`typescript` |
-
-## 検証
+## Evals
 
 ```bash
 cd plugins/tana
 claude plugin eval . --scaffold --allow-tools Edit "Bash(python3 *)" --disallow-tools Write
 ```
 
-各ケースは tana あり・なしの両方で複数回走ります。柱を変えるときは一度に一つだけ変え、どのケースの結果が変わったかを見ます。測った結果と、残したか外したかは `docs/decisions.md` に記録します。
+Each case runs several times, with and without tana. When changing a pillar, change one thing at a time and see which case results move. Record what was measured, and whether it was kept or dropped, in `docs/decisions.md`.
 
-レビューと PR のケース (`review-*`、`red-check-*`、`pr-description` など) は、ファイルの作成と git を使い、トレースを読む grader があるので、別に回します。`--case` は 1 つしか効かないので、ケースごとに回します。既定の判定モデル (haiku) は長いトレースで正しい run を落とすことがあったため、sonnet で判定します (1 run あたり約 $1.2、haiku なら約 $0.25)。
+The review and PR cases (`review-*`, `red-check-*`, `pr-description`, and so on) create files, use git, and have graders that read the trace, so run them separately. Only one `--case` takes effect, so run them one case at a time. The default judge model (haiku) sometimes failed correct runs on long traces, so judge with sonnet (about $1.2 per run, against about $0.25 with haiku).
 
 ```bash
 claude plugin eval . --case 'review-*' --scaffold --allow-tools Edit Write Bash --judge-model sonnet
