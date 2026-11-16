@@ -26,14 +26,14 @@ Write a small TLA+ spec of the flow, let TLC check the rules, and draw what it e
    java -XX:+UseParallelGC -jar tla2tools.jar -continue -workers 1 -config Spec.cfg \
      -metadir states -dump dot,actionlabels graph.dot Spec.tla | tee tlc.out
    ```
-   With `-continue`, TLC goes past a state that breaks a rule, so the chart also shows the states after the bug. Without it, TLC stops at the first broken rule and the graph ends there.
+   With `-continue`, TLC goes past a state that breaks a rule, so the chart also shows the states after the bug. Without it, TLC stops at the first broken rule and the graph ends there. TLC now explores every state it can reach, so the bound from step 4 must hold.
 6. Convert: `python3 -I dot_to_mermaid.py graph.dot > chart.mmd`.
 7. Relabel for the reader. The script prints raw variable values and action names. Edit `chart.mmd` by hand: rename states to what the reader sees ("Paying", "Lease held, write pending"), rename arrows to what they do ("you press play"), and merge states that act the same.
 8. Aim for about 20 arrows. Drop steps every state has, such as a reset, and say in the hand-off which you hid.
 
 ## Reading a violation
 
-TLC prints the shortest trace to the first broken rule in `tlc.out`. Number its steps and write each in plain words. In the chart, mark the state where the rule breaks (`classDef breaks fill:#fdd` and `class s3 breaks`). Do not merge two states that break different rules.
+With `-continue`, TLC prints one trace for each state that breaks a rule, so one bug can fill `tlc.out` with many traces. With one worker, the traces come shortest first. For each rule, take the first trace that names it. Number its steps and write each in plain words. In the chart, mark the state where the rule breaks (`classDef breaks fill:#fdd` and `class s3 breaks`). Do not merge two states that break different rules.
 
 For a large graph, TLC may print more states than a chart can show. Over about 500 states, draw only the path to each broken rule and report the state count.
 

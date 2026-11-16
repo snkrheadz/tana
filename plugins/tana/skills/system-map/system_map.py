@@ -18,27 +18,35 @@ from collections import Counter
 SKIP_DIRS = {".terraform", ".git", "node_modules"}
 HEADER = re.compile(r'(resource|data|module|variable|locals)((?:[ \t]+"[^"\n]*")*)[ \t]*\{')
 USE = re.compile(r"(?<![\w.])(data\.[a-z0-9_]+\.[\w-]+|module\.[\w-]+|local\.[\w-]+|var\.[\w-]+|[a-z][a-z0-9]*_[a-z0-9_]+\.[A-Za-z_][\w-]*)")
-ATTR = re.compile(r'^\s*([A-Za-z_][\w-]*)\s*=(?!=)\s*(.*?)\s*$')
-OPENER = re.compile(r'^\s*(?:(dynamic)\s+"([^"]+)"|([A-Za-z_][\w-]*)(?:\s+"[^"]*")*|([A-Za-z_][\w-]*)\s*=)\s*\{\s*$')
+KEY = re.compile(r"([A-Za-z_][\w-]*)[ \t]*=(?![=>])")
+BLOCK = re.compile(r'([A-Za-z_][\w-]*)((?:[ \t]+"[^"\n]*")*)[ \t]*\{')
 PLAIN = re.compile(r'"[^"$%\\]*"|true|false|-?\d+(?:\.\d+)?')
 PLAIN_LIST = re.compile(r'\[\s*(?:"[^"$%\\]*"\s*,?\s*)*\]')
 HEREDOC = re.compile(r"<<-?([A-Za-z_]\w*)[ \t]*\n")
-EVIDENCE = re.compile(r"^(.+):(\d+)$")
-NODE_ID = re.compile(r"^[A-Za-z0-9_]+$")
+EVIDENCE = re.compile(r"(.+):(\d+)")
+NODE_ID = re.compile(r"[A-Za-z0-9_]+")
+DIRECTIONS = ("LR", "TB", "RL", "BT")
 
 
 def code_view(text):
-    """Return text of the same length with comments and string contents blanked.
+    """Return two texts of the same length as the input: (code, bare).
 
-    Code inside `${...}` stays, so a reference in a string or a heredoc is still found.
+    `code` has comments and string contents blanked. Code inside `${...}` and `%{...}` stays, so a
+    reference in a string or a heredoc is still found. `bare` has only the comments blanked.
     """
     out = list(text)
+    bare = list(text)
     n = len(text)
 
-    def blank(a, b):
+    def blank(a, b, comment=False):
         for k in range(a, b):
             if out[k] != "\n":
                 out[k] = " "
+                if comment:
+                    bare[k] = " "
+
+    def opens_template(i):
+        return text.startswith(("${", "%{"), i) and text[i - 1] != text[i]
 
     def template(i):
         depth = 1
@@ -62,7 +70,7 @@ def code_view(text):
             if text[i] == "\\":
                 blank(i, i + 2)
                 i += 2
-            elif text.startswith("${", i):
+            elif opens_template(i):
                 blank(i, i + 2)
                 i = template(i + 2)
             else:
@@ -76,7 +84,7 @@ def code_view(text):
         blank(i, m.end())
         j = m.end()
         while j < stop:
-            if text.startswith("${", j) and (j == 0 or text[j - 1] != "$"):
+            if opens_template(j):
                 blank(j, j + 2)
                 j = template(j + 2)
             else:
@@ -90,12 +98,12 @@ def code_view(text):
         if c == "#" or text.startswith("//", i):
             j = text.find("\n", i)
             j = n if j < 0 else j
-            blank(i, j)
+            blank(i, j, comment=True)
             i = j
         elif text.startswith("/*", i):
             j = text.find("*/", i)
             j = n if j < 0 else j + 2
-            blank(i, j)
+            blank(i, j, comment=True)
             i = j
         elif c == '"':
             i = quoted(i)
@@ -103,7 +111,7 @@ def code_view(text):
             i = heredoc(i, m)
         else:
             i += 1
-    return "".join(out)
+    return "".join(out), "".join(bare)
 
 
 def block_end(code, start):
@@ -121,38 +129,79 @@ def block_end(code, start):
 def plain_value(raw):
     if PLAIN_LIST.fullmatch(raw):
         return re.findall(r'"([^"]*)"', raw)
-    if PLAIN.fullmatch(raw):
-        return raw[1:-1] if raw.startswith('"') else json.loads(raw)
-    return None
+    if not PLAIN.fullmatch(raw):
+        return None
+    if raw.startswith('"'):
+        return raw[1:-1]
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return raw
 
 
-def attributes(text, code, start, end, first_line):
-    """Yield (path, raw value, line, offset) for each `key = value` line in a block body."""
-    stack = []
-    line_no = first_line
-    pos = start
-    for line, cline in zip(text[start:end].split("\n"), code[start:end].split("\n")):
-        if cline.strip():
-            line = line[: len(cline.rstrip())]
-            indent = len(line) - len(line.lstrip())
-            opener = OPENER.match(line) if cline.rstrip().endswith("{") else None
-            attr = ATTR.match(line) if not opener and cline[indent : indent + 1].strip() else None
-            if attr:
-                yield ".".join([s for s in stack if s] + [attr.group(1)]), attr.group(2), line_no, pos
-            net = cline.count("{") - cline.count("}")
-            if net > 0:
+def value_end(code, i, end):
+    """Return where the expression that starts at i stops: a line end or a closing bracket at its own depth."""
+    depth = 0
+    while i < end:
+        c = code[i]
+        if c in "{[(":
+            depth += 1
+        elif c in "}])":
+            if depth == 0:
+                return i
+            depth -= 1
+        elif c == "\n" and depth == 0:
+            return i
+        i += 1
+    return end
+
+
+def attributes(text, code, bare, start, end):
+    """Yield (path, raw value, offset of the key, top) for each `key = value` in a block body.
+
+    A key counts when it sits directly in a block or a map, not inside a call or a list.
+    `top` is true for a key that sits in no nested block.
+    """
+    frames = []  # one per open bracket: a block or map name, "" for a dynamic block's `content`, None for a call or a list
+    fresh = True  # only spaces since the line began or a block opened
+    i = start
+    while i < end:
+        c = code[i]
+        named = None not in frames
+        if c == "\n":
+            fresh = True
+        elif c in " \t\r":
+            pass
+        elif c in "}])":
+            del frames[-1:]
+            fresh = False
+        elif c in "{[(":
+            frames.append(None)
+            fresh = False
+        elif fresh and (m := BLOCK.match(code, i, end)):
+            labels = re.findall(r'"([^"]*)"', text[m.start(2) : m.end(2)])
+            name = m.group(1)
+            if name == "dynamic" and labels:
+                name = "dynamic:" + labels[0]
+            elif name == "content" and frames and (frames[-1] or "").startswith("dynamic:"):
                 name = ""
-                if opener:
-                    name = opener.group(2) or opener.group(3) or opener.group(4)
-                    if name == "content" and stack and stack[-1].startswith("dynamic:"):
-                        name = ""
-                    elif opener.group(1):
-                        name = "dynamic:" + name
-                stack += [name] + [""] * (net - 1)
-            elif net < 0:
-                del stack[net:]
-        line_no += 1
-        pos += len(line) + 1
+            frames.append(name)
+            i = m.end()
+            continue
+        elif fresh and named and (m := KEY.match(code, i, end)):
+            path = ".".join([f.split(":")[-1] for f in frames if f] + [m.group(1)])
+            yield path, bare[m.end() : value_end(code, m.end(), end)].strip(), i, not frames
+            i = m.end()
+            while i < end and code[i] in " \t":
+                i += 1
+            fresh = i < end and code[i] == "{"
+            if fresh:
+                frames.append(m.group(1))
+                i += 1
+            continue
+        else:
+            fresh = False
+        i += 1
 
 
 def uses_in(code, start, end, line_of):
@@ -166,13 +215,16 @@ def scan_folder(folder, label):
     """Return the resources, data sources, and module calls that one folder's .tf files declare."""
     resources, local_uses, variables = {}, {}, {}
     names = sorted(os.listdir(folder))
-    for name in names:
+    # Terraform loads terraform.tfvars, then each *.auto.tfvars in name order. A later value wins.
+    loaded = [n for n in names if n.endswith(".tf")]
+    loaded += [n for n in names if n == "terraform.tfvars"] + [n for n in names if n.endswith(".auto.tfvars")]
+    for name in loaded:
         path = os.path.join(folder, name)
-        if not os.path.isfile(path) or not name.endswith((".tf", ".tfvars")):
+        if not os.path.isfile(path):
             continue
         with open(path, encoding="utf-8") as f:
             text = f.read()
-        code = code_view(text)
+        code, bare = code_view(text)
         starts = [0] + [i + 1 for i, c in enumerate(text) if c == "\n"]
 
         def line_of(pos, starts=starts):
@@ -183,8 +235,8 @@ def scan_folder(folder, label):
             return lo + 1
 
         if name.endswith(".tfvars"):
-            for key, raw, _, _ in attributes(text, code, 0, len(text), 1):
-                if "." not in key and plain_value(raw) is not None:
+            for key, raw, _, top in attributes(text, code, bare, 0, len(text)):
+                if top and plain_value(raw) is not None:
                     variables[key] = plain_value(raw)
             continue
         pos = 0
@@ -200,14 +252,14 @@ def scan_folder(folder, label):
             end = block_end(code, m.end() - 1)
             body = (m.end(), end)
             first = line_of(m.start())
-            attrs = list(attributes(text, code, body[0], body[1], line_of(body[0])))
+            attrs = list(attributes(text, code, bare, body[0], body[1]))
             if kind == "locals":
-                tops = [(key, at) for key, _, _, at in attrs if "." not in key]
+                tops = [(key, at) for key, _, at, top in attrs if top]
                 for (key, at), nxt in zip(tops, [at for _, at in tops[1:]] + [end]):
                     local_uses.setdefault(key, {}).update(uses_in(code, at, nxt, line_of))
             elif kind == "variable" and labels:
-                for key, raw, _, _ in attrs:
-                    if key == "default" and plain_value(raw) is not None:
+                for key, raw, _, top in attrs:
+                    if top and key == "default" and plain_value(raw) is not None:
                         variables.setdefault("default:" + labels[0], plain_value(raw))
             elif (kind == "module" and len(labels) == 1) or (kind in ("resource", "data") and len(labels) == 2):
                 short = {"resource": "", "data": "data.", "module": "module."}[kind] + ".".join(labels)
@@ -215,7 +267,6 @@ def scan_folder(folder, label):
                 for key, raw, _, _ in attrs:
                     value = plain_value(raw)
                     if value is not None:
-                        key = key.replace("dynamic:", "")
                         values.setdefault(key, [])
                         values[key] += [v for v in (value if isinstance(value, list) else [value]) if v not in values[key]]
                 resources[label + ":" + short] = {
@@ -301,7 +352,7 @@ def cmd_show(inventory, pattern):
 
 
 def evidence_problem(text):
-    m = EVIDENCE.match(text or "")
+    m = EVIDENCE.fullmatch(text) if isinstance(text, str) else None
     if not m:
         return "evidence must be path:line, got %r" % text
     path, line = m.group(1), int(m.group(2))
@@ -351,13 +402,42 @@ def label_text(text):
     return str(text).replace('"', "#quot;").replace("\n", "<br/>")
 
 
+def shape_errors(spec):
+    """Return what is wrong with the map's shape, before any of it is checked against the files."""
+    if not isinstance(spec, dict):
+        return ["the map must be an object with `nodes` and `edges`"]
+    errors = []
+    nodes, edges = spec.get("nodes", {}), spec.get("edges", [])
+    if not isinstance(nodes, dict):
+        errors.append("`nodes` must be an object: box name to box")
+    else:
+        for key, node in nodes.items():
+            if not isinstance(node, dict):
+                errors.append("box %r must be an object" % key)
+                continue
+            globs = node.get("is", [])
+            if not isinstance(globs, str) and not (isinstance(globs, list) and all(isinstance(g, str) for g in globs)):
+                errors.append("box %r: `is` must be a glob or a list of globs" % key)
+            if node.get("shape") not in (None, "store"):
+                errors.append('box %r: shape must be "store" or left out' % key)
+    if not isinstance(edges, list):
+        errors.append("`edges` must be a list")
+    elif not all(isinstance(edge, dict) for edge in edges):
+        errors.append("each arrow must be an object with `from` and `to`")
+    if spec.get("direction", "LR") not in DIRECTIONS:
+        errors.append("direction must be one of %s" % ", ".join(DIRECTIONS))
+    return errors
+
+
 def draw(inventory, spec):
     """Return (chart, errors, report). The chart is None when there are errors."""
-    errors, report = [], []
+    errors, report = shape_errors(spec), []
+    if errors:
+        return None, errors, report
     nodes, edges = spec.get("nodes", {}), spec.get("edges", [])
     owner = {}
     for key, node in nodes.items():
-        if not NODE_ID.match(key):
+        if not NODE_ID.fullmatch(key):
             errors.append("box %r: use only letters, digits, and _ in a box name" % key)
         patterns = node.get("is", [])
         patterns = [patterns] if isinstance(patterns, str) else patterns
@@ -378,7 +458,7 @@ def draw(inventory, spec):
     drawn, from_files = set(), 0
     for edge in edges:
         a, b = edge.get("from"), edge.get("to")
-        if a not in nodes or b not in nodes:
+        if not isinstance(a, str) or not isinstance(b, str) or a not in nodes or b not in nodes:
             errors.append("arrow %r -> %r: no such box" % (a, b))
             continue
         drawn.add((a, b))
@@ -443,8 +523,13 @@ def main(argv):
     if argv[0] == "show":
         print("\n".join(cmd_show(inventory, argv[1])))
         return 0
-    with open(argv[1], encoding="utf-8") as f:
-        chart, errors, report = draw(inventory, json.load(f))
+    try:
+        with open(argv[1], encoding="utf-8") as f:
+            spec = json.load(f)
+    except (OSError, ValueError) as problem:
+        print("%s is not valid JSON: %s" % (argv[1], problem), file=sys.stderr)
+        return 1
+    chart, errors, report = draw(inventory, spec)
     print("\n".join(errors + report), file=sys.stderr)
     if errors:
         return 1

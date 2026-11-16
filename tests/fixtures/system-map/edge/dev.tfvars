@@ -1,0 +1,2 @@
+image  = "dev"
+flavor = "dev"

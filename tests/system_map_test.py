@@ -180,5 +180,75 @@ class SystemMapTest(unittest.TestCase):
         self.assertIn("     1  google_storage_bucket_iam_member", run.stdout)
 
 
+class EdgeCaseTest(unittest.TestCase):
+    """Each case here failed once on a real probe."""
+
+    @classmethod
+    def setUpClass(cls):
+        os.chdir(os.path.join(HERE, "fixtures", "system-map"))
+        cls.inv = system_map.scan(["edge"])
+
+    def uses(self, name):
+        return sorted(a.split(":")[1] for a in self.inv["edge:" + name]["uses"])
+
+    def test_a_local_map_keeps_its_own_uses(self):
+        self.assertEqual(self.uses("google_storage_bucket.by_region"), [])
+        self.assertEqual(self.uses("google_storage_bucket.by_labels"), ["google_service_account.api"])
+
+    def test_keys_inside_a_call_are_not_locals(self):
+        self.assertEqual(self.uses("google_storage_bucket.by_policy"), ["google_service_account.reader"])
+
+    def test_trailing_comments_do_not_shift_the_next_local(self):
+        self.assertEqual(self.uses("google_storage_bucket.by_topic"), ["google_pubsub_topic.events"])
+
+    def test_escaped_interpolation_is_text_and_a_directive_is_code(self):
+        self.assertEqual(self.uses("google_storage_bucket.escaped"), ["google_service_account.api"])
+
+    def test_values_keep_lists_over_several_lines_and_skip_keys_inside_a_call(self):
+        values = self.inv["edge:google_cloud_run_v2_job.worker"]["values"]
+        self.assertEqual(values["template.containers.args"], ["run", "src/worker.ts"])
+        self.assertEqual(values["name"], ["worker"])
+        self.assertEqual(values["cloud_run.service"], ["shop-api"])
+        self.assertEqual(values["template.containers.limits.cpu"], ["2"])
+
+    def test_a_number_with_a_leading_zero_does_not_stop_the_scan(self):
+        self.assertEqual(self.inv["edge:google_cloud_run_v2_job.worker"]["values"]["mode"], ["0644"])
+
+    def test_only_the_tfvars_files_terraform_loads_are_read(self):
+        self.assertEqual(self.inv["edge:google_cloud_run_v2_job.worker"]["vars"], {"image": "auto", "flavor": None})
+
+    def test_a_malformed_map_gives_errors_not_a_traceback(self):
+        base = {"nodes": {"a": {"label": "A", "is": "google_pubsub_topic.events"}}, "edges": []}
+        cases = [
+            ({"nodes": {"a": {"label": "A", "evidence": 12}}}, "evidence must be path:line"),
+            ({"nodes": {"a": {"label": "A", "evidence": ["edge/main.tf:3"]}}}, "evidence must be path:line"),
+            ({"nodes": {"a": "google_pubsub_topic.events"}}, "box 'a' must be an object"),
+            ({"nodes": {"a": {"is": 3}}}, "`is` must be a glob or a list of globs"),
+            ({"nodes": ["a"]}, "`nodes` must be an object"),
+            (dict(base, edges={"from": "a"}), "`edges` must be a list"),
+            (dict(base, edges=["a"]), "each arrow must be an object"),
+            (dict(base, direction="left-right"), "direction must be one of"),
+            ({"nodes": {"a\n": {"label": "A", "is": "google_pubsub_topic.events"}}}, "use only letters, digits, and _"),
+            (dict(base, nodes={"a": {"is": "google_pubsub_topic.events", "shape": "disk"}}), 'shape must be "store"'),
+            (["not", "a", "map"], "the map must be an object"),
+        ]
+        for spec, message in cases:
+            chart, errors, _ = system_map.draw(self.inv, spec)
+            self.assertIsNone(chart, spec)
+            self.assertTrue(any(message in e for e in errors), (spec, errors))
+
+    def test_command_line_reports_a_map_that_is_not_json(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            f.write("{nodes: ")
+        try:
+            run = subprocess.run([sys.executable, "-I", SCRIPT, "draw", f.name, "edge"], capture_output=True, text=True)
+        finally:
+            os.unlink(f.name)
+        self.assertEqual(run.returncode, 1)
+        self.assertEqual(run.stdout, "")
+        self.assertIn("is not valid JSON", run.stderr)
+        self.assertNotIn("Traceback", run.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

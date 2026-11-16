@@ -60,6 +60,7 @@ The chart shows what runs, what it talks to, and where data rests, in the words 
 - A link written as a plain name, such as `service = "shop-api"`. Terraform folders with separate state link this way. `show` prints the plain values, so find the line and cite it as evidence.
 - What the code does when it runs. An access grant shows that an account may read a bucket. It does not show that the code reads it. For that, cite the code.
 - Whether the files match what is deployed. The chart shows the config at one commit.
+- A variable set with `-var`, `-var-file`, or the environment. `show` takes variable values from `terraform.tfvars` and `*.auto.tfvars` only, as a plain `terraform apply` does.
 - What an evidence line says. The script checks that the line exists and is not blank. Open each line before you cite it.
 - Config that is not Terraform, such as Kubernetes manifests or Compose files. Each box from those files needs evidence.
 
