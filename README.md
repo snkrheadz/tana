@@ -5,7 +5,7 @@
 > Find the depth before you cast.
 
 A tana is the depth where the fish are holding. An angler who skips finding it can cast all day and catch nothing.
-In code, the depth is the check that tells you a change is right. tana is a working style for Claude Code: find the check first, then make the change. It comes with 33 skills, each called as `/tana:<name>`.
+In code, the depth is the check that tells you a change is right. tana is a working style for Claude Code: find the check first, then make the change. It comes with 34 skills, each called as `/tana:<name>`.
 
 ## The five pillars
 
@@ -47,13 +47,13 @@ The script reads the list of distributed files from `plugins/tana/FILES`. After 
 
 ## Skills
 
-tana has 33 skills. If you are not sure which one fits, tell `/tana:guide` what you are doing and it points you to one.
+tana has 34 skills. If you are not sure which one fits, tell `/tana:guide` what you are doing and it points you to one.
 
 | Group | Skills |
 | :- | :- |
 | Working style | `mode` (work the tana way), `guide` (which skill fits which task) |
 | Tune the setup | `retie` (remove config items, rerun real tasks, keep only what changes behavior), `review-fit` (fit REVIEW.md and the CI review to what /code-review actually reads and returns) |
-| Understand | `explain-code` (how the code works and where things live), `trace-why` (why it is this way, what broke it), `teach` (explain so a person understands), `plain-words` (restate the last reply plainly), `restate-goal` (restate the goal), `catch-up` (catch up on what happened while you were away), `rebuild-context` (rebuild your own context), `sharpen` (deepen a request) |
+| Understand | `explain-code` (how the code works and where things live), `trace-why` (why it is this way, what broke it), `system-map` (draw a service or a cloud environment from its config), `teach` (explain so a person understands), `plain-words` (restate the last reply plainly), `restate-goal` (restate the goal), `catch-up` (catch up on what happened while you were away), `rebuild-context` (rebuild your own context), `sharpen` (deepen a request) |
 | Design and review | `sketch-design` (types and structure first), `compete` (pit several drafts against each other and graft the best parts), `fan-out` (research in parallel, report once), `stress-review` (attack the premises and the design), `blast-radius` (what breaks outside the diff), `plan-big-change` (an auditable plan for a large change) |
 | Verify | `failing-test-first`, `vet-measurement` (check a performance number before trusting it), `create-verify-skill` / `maintain-verify-skill` (a verify skill that drives the app like a user), `create-formal-check` / `maintain-formal-check` (formal verification), `statechart` (check a state machine in TLA+ and draw it) |
 | Learn and write | `lock-in-lessons` (make a repeated mistake impossible), `retro` (look back on a session), `decision-log` (record decisions in long work), `capture-my-style` (turn your own style into a skill), `comment-audit`, `cut-ai-tells` (cut mechanical phrasing), `tech-writing`, `typescript` |
@@ -76,9 +76,10 @@ docs/decisions.md      # changes measured with evals, and what was kept or dropp
 scripts/
 ├── update-files.sh    # regenerate plugins/tana/FILES (--check detects a stale list)
 └── check-terms.py     # check that banned words stay out
+tests/                 # tests for the scripts that skills ship
 ```
 
-CI (`.github/workflows/check.yml`) runs `update-files.sh --check` and `check-terms.py` on every push and PR.
+CI (`.github/workflows/check.yml`) runs `update-files.sh --check`, `check-terms.py`, and the tests on every push and PR.
 
 ## Evals
 

@@ -78,6 +78,8 @@ skills/sketch-design/references/rationale-template.md
 skills/statechart/SKILL.md
 skills/statechart/dot_to_mermaid.py
 skills/stress-review/SKILL.md
+skills/system-map/SKILL.md
+skills/system-map/system_map.py
 skills/teach/SKILL.md
 skills/tech-writing/SKILL.md
 skills/trace-why/SKILL.md

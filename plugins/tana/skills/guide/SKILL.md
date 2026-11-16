@@ -31,6 +31,7 @@ a playbook usually fits better than a skill for everyday work:
 | :- | :- |
 | Understand how some code works or where a change belongs | `/tana:explain-code` |
 | Know why the code is the way it is, or what caused a regression | `/tana:trace-why` |
+| Draw a service or a cloud environment from its config | `/tana:system-map` |
 | Have a body of work explained so a person understands it | `/tana:teach` |
 | Hear the last answer again in plain words | `/tana:plain-words` |
 | Check that the agent understood the goal | `/tana:restate-goal` |
