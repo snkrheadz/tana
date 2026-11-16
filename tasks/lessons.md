@@ -2,6 +2,32 @@
 
 Corrections from the user, with the pattern and the reason. Newest first.
 
+## 2026-11-16: a parser in a skill script needs probes of real shapes, not only my own fixture
+
+- **Pattern:** `system_map.py` shipped with 17 passing tests and still misread common
+  Terraform: a local written as a multi-line map, keys inside a `jsonencode` call, a
+  trailing comment that shifted later offsets, an escaped interpolation, a list over
+  several lines, a number with a leading zero (a crash), and `*.tfvars` files that
+  Terraform never loads. A review found them by running small probe folders.
+- **Why:** the fixture held only the shapes I had in mind while writing the parser, and it
+  read lines with regexes and kept a name stack on the side. Each miss gave a false tie
+  or dropped a real one, which is the one thing the `draw` check exists to prevent.
+- **How to apply:** for a script that reads a nested format, walk the brackets and keep
+  real offsets. Do not match line by line. Before shipping, write one probe per shape the
+  format allows (nested map, call argument, comment at line end, escape, multi-line
+  value, odd literal), as `EdgeCaseTest` in `tests/system_map_test.py` now does, and
+  compare the reading of a real repo before and after each parser change.
+
+## 2026-11-16: after changing a command in a skill, reread the lines that describe its output
+
+- **Pattern:** adding `-continue` to the TLC command in `statechart` left "TLC prints the
+  shortest trace to the first broken rule" in the next section. With the flag, TLC prints
+  one trace for each state that breaks a rule.
+- **Why:** I checked the flag against the claim it fixed and did not rerun the other
+  claims in the file that depend on the same command.
+- **How to apply:** when a command in a skill changes, search the skill for every
+  sentence about that command's output and run a case that exercises each one.
+
 ## 2026-11-02: README.md is English only
 
 - **Pattern:** write README.md entirely in English, with no Japanese, even when the
